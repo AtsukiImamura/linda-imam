@@ -5,10 +5,10 @@ module.exports = {
   //   watch: true,
   mode: "development",
   devtool: "inline-source-map",
-  entry: "./client/src/extention.ts",
+  entry: "./client/src/extension.ts",
   output: {
     path: path.join(__dirname, "./dist/"),
-    filename: "extention.js"
+    filename: "extension.js"
   },
   module: {
     rules: [
@@ -27,7 +27,7 @@ module.exports = {
     ]
   },
 
-  //   externals: ["axios"],
+  // externals: ["vscode"],
   resolve: {
     extensions: [".ts", ".js", ".vue", ".scss"],
     alias: {
