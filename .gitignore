@@ -1,0 +1,6 @@
+node_modules/
+.bloop/
+.metals/
+.vscode/
+dist/
+target/

@@ -1,0 +1,25 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'imam.ImamHelloWorld'
+jar {
+    manifest {
+        attributes 'Main-Class': 'imam.ImamHelloWorld'
+    }
+}
+sourceSets {
+    main {
+        java {
+            srcDirs = ['server']
+        }
+    }
+}
+
+repositories {
+    maven { url 'https://jitpack.io' }
+    mavenCentral()
+}
+dependencies {
+    implementation 'com.github.uwol:proleap-cobol-parser:2.4.0'
+//    implementation 'za.co.absa.cobrix:cobol-parser_2.12:2.4.10'
+}
