@@ -1,4 +1,5 @@
 const path = require("path");
+const { VueLoaderPlugin } = require('vue-loader')
 
 const main = {
   target: "webworker",
@@ -37,38 +38,89 @@ const main = {
 
 const front = {
   target: "web",
-  // target: "webworker",
   mode: "development",
-  devtool: "inline-source-map",
+  // devtool: "inline-source-map",
   entry: "./src/front/linda.ts",
   output: {
-    path: path.join(__dirname, "./media/"),
-    filename: "linda.js",
-    // libraryTarget: 'commonjs2'
+    path: path.join(__dirname, "./media"),
+    filename: "linda.js"
   },
   module: {
     rules: [
       {
         test: /\.ts$/,
         loader: "ts-loader",
-        exclude: /node_modules/
+        options: {
+          appendTsSuffixTo: [/\.vue$/]
+        }
       },
       {
-        test: /\.js/,
-        loader: "babel-loader",
-        exclude: /node_modules/
+        test: /\.vue/,
+        loader: "vue-loader"
       },
+      // {
+      //   test: /\.js/,
+      //   loader: "babel-loader",
+      //   exclude: /node_modules/,
+      //   query: {
+      //     presets: ["es2015"]
+      //   }
+      // },
+      {
+        test: /\.css/,
+        use: ["vue-style-loader", "css-loader"]
+      },
+      {
+        test: /\.scss/,
+        use: [
+          //   { loader: MiniCssExtractPlugin.loader },
+          {
+            loader: "vue-style-loader",
+            options: {
+              sourceMap: true
+            }
+          },
+          {
+            loader: "css-loader",
+            options: {
+              url: false,
+              sourceMap: true
+              //   minimize: true
+            }
+          },
+          {
+            loader: "sass-loader",
+            options: {
+              sourceMap: true
+            }
+          },
+          {
+            loader: "sass-resources-loader",
+            options: {
+              resources: path.resolve(
+                __dirname,
+                "./src/resources/sass/_variables.scss"
+              )
+            }
+          }
+        ],
+        exclude: /node_modules/
+      }
     ]
   },
-  externals: {
-    vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-  },
+
   resolve: {
-    extensions: [".ts", ".js", ".scss"],
-    modules: [
-      path.resolve('./node_modules')
-    ]
+    extensions: [".ts", ".js", ".vue", ".scss"],
+    alias: {
+      vue$: "vue/dist/vue.esm.js"
+    }
   },
+
+  plugins: [new VueLoaderPlugin()],
+  // node: {
+  //   fs: "empty",
+  //   net: "empty"
+  // }
 };
 
 module.exports = [main, front]

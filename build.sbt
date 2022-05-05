@@ -37,6 +37,11 @@ libraryDependencies += "za.co.absa.cobrix" %% "spark-cobol" % "2.4.10"
 
 libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.7.36"
 
+libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2"
+
+// https://search.maven.org/artifact/io.circe/circe-core_2.13/0.15.0-M1/jar
+// libraryDependencies += "io.circe" % "circe-core_2.13" % "0.15.0-M1"
+
 
 // https://mvnrepository.com/artifact/za.co.absa.cobrix/cobol-parser
 // libraryDependencies += "za.co.absa.cobrix" %% "cobol-parser" % "2.4.10"

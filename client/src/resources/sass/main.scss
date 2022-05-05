@@ -3,6 +3,10 @@ html, body {
 	font-size: 1.0rem;
 }
 
+* {
+	color: #ffffff;
+}
+
 .row {
 	display: flex;
 	flex-direction: row;
@@ -24,7 +28,7 @@ html, body {
 .col-hex {
 	width: 460px;
 }
-.redefined {
+.children {
 	padding-left: 12px;
 }
 
@@ -49,62 +53,4 @@ select {
 	}
 }
 
-.header-selection {
-	width: 100%;
-	padding: 10px 5px;
-	background-color: rgba(48, 48,48, 0.9);
-	.title {
-		font-size: 0.7rem;
-	}
 
-}
-.general-selection {
-	width: 100%;
-	position: relative;
-	.selected {
-		padding: 3px 4px;
-		border-bottom: 1px solid rgba(80, 80, 80, 0.9);;
-		&:hover {
-			cursor: pointer;
-			background-color: rgba(56, 56,56, 0.9);
-			transition-duration: 0.25s;
-		}
-		&:before, &:after {
-			position: absolute;
-			content: "";
-			width: 10px;
-			height: 1px;
-			background-color: #ffffff;
-		}
-		&:after {
-			top: 15px;
-			right: 18px;
-			transform: rotate(45deg);
-		}
-		&:before {
-			top: 15px;
-			right: 11px;
-			transform: rotate(-45deg);
-		}
-	}
-	.list {
-		&.closed {
-			display: none;
-		}
-		position: absolute;
-		top: 5px;
-		left: 0px;
-		background-color: #151515;
-		box-shadow: 3px 5px 3px rgba(60, 60, 60, 0.8);
-		width: 100%;
-		.option {
-			width: calc(100% - 12px);
-			padding: 3px 6px;
-			&:hover {
-				background-color: #222222;
-				cursor: pointer;
-				transition-duration: 0.25s;
-			}
-		}
-	}
-}

@@ -6,19 +6,19 @@ import za.co.absa.cobrix.cobol.parser.ast.Group
 import za.co.absa.cobrix.cobol.parser.ast.datatype.Integral
 import za.co.absa.cobrix.cobol.parser.ast.datatype.Decimal
 import za.co.absa.cobrix.cobol.parser.ast.datatype.AlphaNumeric
+import java.io.File
+import java.io.FileWriter
+import java.io.IOException
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 object HelloWorld {
   def main(args: Array[String]): Unit = {
-    println("Hello, World!")
-
-    // val sparkBuilder = SparkSession.builder().appName("Example")
-    // val spark = sparkBuilder
-    //   .getOrCreate()
-
+    
     val copybook =
       """        01  COMPANY-DETAILS.
         |            05  SEGMENT-ID           PIC X(5).
         |            05  SEGMENT-ID-P         REDEFINES SEGMENT-ID
-        |                                      PIC S9(8) PACKED-DECIMAL.
+        |                                      PIC S9(8) COMP-3.
         |            05  COMPANY-ID           PIC X(10).
         |            05  STATIC-DETAILS.
         |               10  COMPANY-NAME      PIC X(15).
@@ -35,29 +35,65 @@ object HelloWorld {
         |""".stripMargin
 
     val parsedSchema = CopybookParser.parseSimple(copybook)
-    // val cobolSchema = new CobolSchema(parsedSchema)
     val ast = parsedSchema.ast
+
+
+    var s = Set[Map[String, Any]]()
     for (c <- ast.children) {
-        printCopyBook(c, 0)
+        s = s + printCopyBook(c, 0)
+    }
+
+    try{    
+      val file = new File("C:\\Users\\ohmoo\\projects\\linda-imam\\target\\statement.json");
+      val filewriter = new FileWriter(file);
+
+      val mapper = JsonMapper.builder()
+        .addModule(DefaultScalaModule)
+        .build()
+      
+      filewriter.write(mapper.writeValueAsString(s))
+      filewriter.close()
+    }catch { case e: IOException => 
+      System.out.println(e);
     }
   }
 
-  private def printCopyBook(statement: Statement, pLevel: Int): Unit = {
+  private def printCopyBook(statement: Statement, pLevel: Int): Map[String, Any] = {
+
     statement match {
       case v:Primitive => {
-        v.dataType match {
-          case p:Integral => System.out.println(String.format("%s%s %s %s", "  ".repeat(pLevel), v.level.toString(), v.name, "Int[" + p.pic+" "+p.precision+"]"))
-          case p:AlphaNumeric => System.out.println(String.format("%s%s %s %s", "  ".repeat(pLevel), v.level.toString(), v.name, "AlphaNumeric[" + p.pic+" "+p.length+"]"))
-          case p:Decimal => System.out.println(String.format("%s%s %s %s", "  ".repeat(pLevel), v.level.toString(), v.name, "Decimal[" + p.pic+" "+p.precision+"]"))
+        try{
+          statementToMap(v)
+        }catch { case e: IOException => 
+          System.out.println(e);
+          Map[String, Any]()
         }
-      
       }
       case v:Group => {
+        var s = Set[Map[String, Any]]()
         for(c <- v.children) {
-          printCopyBook(c, pLevel + 1)
+          s = s + printCopyBook(c, pLevel + 1)
         }
+        Map(v.name -> s)
       }
       case _ => throw new IllegalStateException("Unknown AST object encountered.")
     }
+  }
+
+  private def statementToMap(statement: Primitive): Map[String, Any] = {
+    Map(
+                "level"-> statement.level,
+                "name"-> statement.name,
+                "lineNumber"-> statement.lineNumber,
+                "dataType"-> Map("pic"->statement.dataType.pic, "originalPic" -> statement.dataType.originalPic),
+                "redefines"-> {statement.redefines match { case Some(s) => s case None => ""}},
+                "isRedefined"-> statement.isRedefined,
+                "occurs"-> {statement.occurs match { case Some(s) => s case None => ""}},
+                "to"->  {statement.to match { case Some(s) => s case None => ""}},
+                "dependingOn"-> {statement.dependingOn match { case Some(s) => s case None => ""}},
+                "dependingOnHandlers"-> statement.dependingOnHandlers,
+                "isFiller"-> statement.isFiller,
+                "binaryProperties"-> statement.binaryProperties,
+              )
   }
 }

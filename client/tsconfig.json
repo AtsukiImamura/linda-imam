@@ -8,6 +8,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"rootDir": "src",
+		"experimentalDecorators": true
 	},
   "exclude": ["node_modules/*"],
   "include": ["src/**/*.ts"]

@@ -351,9 +351,6 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 		// const styleBootstrapUri = webview.asWebviewUri(vscode.Uri.joinPath(
 		// 	this._context.extensionUri,  'media', 'bootstrap.min.css'));
 	
-		console.log(`styleMainUri: ${styleMainUri}`)
-		console.log(`scriptUri: ${scriptUri}`)
-
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
 
@@ -366,19 +363,17 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 				<!--
 				Use a content security policy to only allow loading images from https or from our extension directory,
 				and only allow scripts that have a specific nonce.
-				-->
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-
+				-->
+				
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<link href="${styleMainUri}" rel="stylesheet" />
 				<link href="${styleVSCodeUri}" rel="stylesheet" />
 				<title>Paw Draw</title>
 			</head>
 			<body>
-				<div class="row">
-					<div class="col col-header">開始日</div>
-					<div class="col col-edit">20220402</div>
-					<div class="col col-hex">020210402C</div>
+				<div id="app">
+					<app></app>
 				</div>
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
