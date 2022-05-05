@@ -340,16 +340,19 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this._context.extensionUri, 'media', 'pawDraw.js'));
-
-		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this._context.extensionUri, 'media', 'reset.css'));
-
-		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this._context.extensionUri, 'media', 'vscode.css'));
+			this._context.extensionUri, 'media', 'linda.js'));
 
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this._context.extensionUri, 'media', 'pawDraw.css'));
+			this._context.extensionUri, 'media', 'main.css'));
+
+		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(
+			this._context.extensionUri , 'media', 'vscode.css'));
+		
+		// const styleBootstrapUri = webview.asWebviewUri(vscode.Uri.joinPath(
+		// 	this._context.extensionUri,  'media', 'bootstrap.min.css'));
+	
+		console.log(`styleMainUri: ${styleMainUri}`)
+		console.log(`scriptUri: ${scriptUri}`)
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
@@ -367,28 +370,8 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-				<link href="${styleResetUri}" rel="stylesheet" />
-				<link href="${styleVSCodeUri}" rel="stylesheet" />
 				<link href="${styleMainUri}" rel="stylesheet" />
-				<style>
-					.row {
-						display: flex;
-					}
-					.col {
-						margin: 8px;
-						border: 1px;
-					}
-					.col-header {
-						width: 140px;
-					}
-					.col-edit {
-						width: 280px;
-					}
-					.col-hex {
-						width: 420px;
-					}
-				</style>
+				<link href="${styleVSCodeUri}" rel="stylesheet" />
 				<title>Paw Draw</title>
 			</head>
 			<body>
