@@ -9,14 +9,22 @@
           </select>
         </div>
         <template v-if="drilldownStatements.length == 0">
-          <div class="col col-edit">{{ statement.dispValue }} </div>
-          <div class="col col-hex">{{ statement.dispByteValue }}</div>
+          <div class="col col-edit">
+            <input v-model="statement.dispValue" />
+          </div>
+          <div class="col col-hex">
+            <BinaryEditor :statement="statement"></BinaryEditor>
+          </div>
         </template>
       </template>
       <template v-if="statement.redefinedStatements.length == 0">
         <div class="col col-header">{{ statement.name }}</div>
-        <div class="col col-edit">{{ statement.dispValue }} </div>
-        <div class="col col-hex">{{ statement.dispByteValue }}</div>
+        <div class="col col-edit">            
+          <input v-model="statement.dispValue" />
+        </div>
+        <div class="col col-hex">
+            <BinaryEditor :statement="statement"></BinaryEditor>
+        </div>
       </template>
     </div>
     <div class="children" v-if="drilldownStatements.length > 0">
@@ -28,9 +36,10 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import CopyStatement from "../model/CopyStatement"
+import BinaryEditor from "./BinaryEditor.vue"
 
 @Component({
-  components: {}
+  components: {BinaryEditor}
 })
 export default class CopyStatementView extends Vue {
   @Prop() statement!: CopyStatement;
