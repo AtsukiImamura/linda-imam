@@ -9,23 +9,54 @@
             </PullDownSelector>
         </div>
         <div id="panel-data">
-            <CopyStatement :statement="statement"></CopyStatement>
+            <CopyStatementView v-if="statement.name" :statement="statement"></CopyStatementView>
         </div>
     </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import CopyStatement from "./CopyStatement.vue";
-import { ICopyBook, IStatement} from "../declaration/interface/ICopy"
+import CopyStatementView from "./CopyStatementView.vue";
+import { ICopyBook, ICopyPrimitive} from "../declaration/interface/ICopy"
 import PullDownSelector from "./components/PullDownSelector.vue"
+import CopyStatement from "../model/CopyStatement";
 
 @Component({
-    components: { CopyStatement, PullDownSelector}
+    components: { CopyStatementView, PullDownSelector}
 })
 export default class App extends Vue {
 
-    public mounted(): void {}
+	// @ts-ignore
+	private vscode = acquireVsCodeApi();
+
+
+    public created(): void {
+        console.log("::::created.");
+        // const buf = Buffer.from(new ArrayBuffer(10))
+        // console.log(buf)
+    }
+    public mounted(): void {
+        // @ts-ignore
+        (window as any).addEventListener('message', async e => {
+            const { type, body, requestId } = e.data;
+            switch (type) {
+                case 'init':{}
+                case 'copy':
+                    {
+                        console.log("@@ message received!!")
+                        console.log(body.copy)
+                        this.statement = body.copy ? new CopyStatement(body.copy) : {};
+                        return;
+                    }
+		    }
+        });
+        
+        console.log("mounted!!!!!")
+        this.vscode.postMessage({
+            type: 'copy',
+            path: "C:\\Users\\ohmoo\\projects\\linda-imam\\client\\media\\test.cpy",
+        });
+    }
 
     public get copySelections(): any[] {
         return [
@@ -44,87 +75,7 @@ export default class App extends Vue {
         console.log(`## selectCopyBook  op: ${op}`)
     }
 
-    public statement: ICopyBook = {
-        id: "C001",
-        name: "企業",
-        statements: [
-            {
-                id: "001",
-                name: "名称",
-                value: "This is a name",
-                redefines:[]
-            } as IStatement,
-            {
-                id: "001",
-                name: "設立年月日",
-                value: "20220401",
-                redefines: [
-                    {
-                        id: "C002",
-                        name: "年月日",
-                        statements: [
-                            {
-                                id: "00101",
-                                name: "年",
-                                value: "2022",
-                                redefines:[
-                                    {
-                                        id: "C002",
-                                        name: "年月日４",
-                                        statements: [
-                                            {
-                                                id: "001021",
-                                                name: "年１",
-                                                value: "2",
-                                                redefines:[]
-                                            } as IStatement,
-                                            {
-                                                id: "001021",
-                                                name: "年２",
-                                                value: "0",
-                                                redefines:[]
-                                            } as IStatement,
-                                            {
-                                                id: "001021",
-                                                name: "年３",
-                                                value: "2",
-                                                redefines:[]
-                                            } as IStatement,
-                                            {
-                                                id: "001021",
-                                                name: "年４",
-                                                value: "2",
-                                                redefines:[]
-                                            } as IStatement,
-                                        ]
-                                    }
-                                ]
-                            } as IStatement,
-                            {
-                                id: "00102",
-                                name: "月",
-                                value: "04",
-                                redefines:[]
-                            } as IStatement,
-                            {
-                                id: "00103",
-                                name: "日",
-                                value: "01",
-                                redefines:[]
-                            } as IStatement,
-                        ]
-                    } as IStatement,
-
-                ]
-            } as IStatement,
-            {
-                id: "001",
-                name: "代表取締役",
-                value: "iMam",
-                redefines:[]
-            } as IStatement,
-        ]
-    }
+    public statement: CopyStatement | {} = {};
 }
 </script>
 

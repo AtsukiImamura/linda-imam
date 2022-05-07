@@ -2,13 +2,48 @@ const path = require("path");
 const { VueLoaderPlugin } = require('vue-loader')
 
 const main = {
-  target: "webworker",
+  target: "node", // webworker
   mode: "development",
   devtool: "inline-source-map",
   entry: "./src/background/extension.ts",
   output: {
     path: path.join(__dirname, "./dist/"),
     filename: "extension.js",
+    libraryTarget: 'commonjs2'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        loader: "ts-loader",
+        exclude: /node_modules/
+      },
+      {
+        test: /\.js/,
+        loader: "babel-loader",
+        exclude: /node_modules/
+      },
+    ]
+  },
+  externals: {
+    vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
+  },
+  resolve: {
+    extensions: [".ts", ".js", ".scss"],
+    modules: [
+      path.resolve('./node_modules')
+    ]
+  },
+};
+
+const test = {
+  target: "node", // webworker
+  mode: "development",
+  devtool: "inline-source-map",
+  entry: "./src/background/test.ts",
+  output: {
+    path: path.join(__dirname, "./dist/"),
+    filename: "test.js",
     libraryTarget: 'commonjs2'
   },
   module: {
@@ -123,4 +158,4 @@ const front = {
   // }
 };
 
-module.exports = [main, front]
+module.exports = [main, front, test]

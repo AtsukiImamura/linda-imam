@@ -39,6 +39,10 @@ libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.7.36"
 
 libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2"
 
+libraryDependencies += "org.scala-lang" % "scala-library" % "2.12.5"
+
+libraryDependencies += "args4j" % "args4j" % "2.33"
+
 // https://search.maven.org/artifact/io.circe/circe-core_2.13/0.15.0-M1/jar
 // libraryDependencies += "io.circe" % "circe-core_2.13" % "0.15.0-M1"
 
@@ -96,3 +100,8 @@ libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" 
 // To learn more about multi-project builds, head over to the official sbt
 // documentation at http://www.scala-sbt.org/documentation.html
 // seq(assemblySettings: _*) 
+
+assemblyMergeStrategy in assembly := {
+ case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+ case x => MergeStrategy.first
+}

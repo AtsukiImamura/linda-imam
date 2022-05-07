@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
+import { ICopyAstGroup, ICopyBook, ICopyPrimitive } from '../front/declaration/interface/ICopy';
 import { Disposable, disposeAll } from './dispose';
+import LspCommunicator from './model/lspCommunicator';
 import { getNonce } from './util';
-
+import * as fs from "fs"
+import DataParser from '../front/model/DataParser';
 /**
  * Define the type of edits used in paw draw files.
  */
@@ -38,6 +41,7 @@ class PawDrawDocument extends Disposable implements vscode.CustomDocument {
 	}
 
 	private readonly _uri: vscode.Uri;
+	private readonly lspCommunicator: LspCommunicator = new LspCommunicator((data: string) => this.onParseCopyResponse(data))
 
 	private _documentData: Uint8Array;
 	private _edits: Array<PawDrawEdit> = [];
@@ -54,6 +58,7 @@ class PawDrawDocument extends Disposable implements vscode.CustomDocument {
 		this._uri = uri;
 		this._documentData = initialContent;
 		this._delegate = delegate;
+
 	}
 
 	public get uri() { return this._uri; }
@@ -97,6 +102,37 @@ class PawDrawDocument extends Disposable implements vscode.CustomDocument {
 		super.dispose();
 	}
 
+	private readonly _onDidChangeCopyBook = this._register(new vscode.EventEmitter<{
+		readonly copy: ICopyBook | ICopyPrimitive
+	}>());
+
+	public readonly onDidChangeCopyBook = this._onDidChangeCopyBook.event;
+
+	public applyCopyBook(path: string) {
+		this.lspCommunicator.putMessage("parse -p "+ path)
+	}
+
+	private onParseCopyResponse(res: string) {
+		console.log("++ lsp mesage: "+res)
+		const details = res.split(" ").map(d => d.split(/\r?\n/g)).reduce((acc, cur) => [...acc, ...cur], [])
+		if(details.length < 4) {
+			return;
+		}
+		if(parseInt(details[0]) != 0) {
+			return
+		}
+		console.log(details)
+		const copy = (JSON.parse(fs.readFileSync(details[3].replace(/\r?\n/g, '')).toString()) as ICopyAstGroup[])[0]
+		const data = "1234567890123456789012345678901234567890123456789012345678901234"
+		// vscode.workspace.fs.readFile(this.uri)
+		console.log("this.uri: "+this.uri)
+		const parser = new DataParser(Uint8Array.from(data.split("").map(d => d.charCodeAt(0))), copy)
+		const parsed = parser.parse()
+		
+		console.log("copy created...")
+		console.log(parsed)
+		this._onDidChangeCopyBook.fire({copy: parsed})
+	}
 	/**
 	 * Called when the user edits the document in a webview.
 	 *
@@ -224,6 +260,7 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 
 	private static readonly viewType = 'catCustoms.pawDraw';
 
+
 	/**
 	 * Tracks all known webviews
 	 */
@@ -268,6 +305,18 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 				this.postMessage(webviewPanel, 'update', {
 					edits: e.edits,
 					content: e.content,
+				});
+			}
+		}));
+
+		
+		listeners.push(document.onDidChangeCopyBook(e => {
+			// Update all webviews when the applied copy book changes
+			for (const webviewPanel of this.webviews.get(document.uri)) {
+				console.log("sending copy...")
+				console.log(e.copy)
+				this.postMessage(webviewPanel, 'copy', {
+					copy: e.copy
 				});
 			}
 		}));
@@ -394,9 +443,20 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 		panel.webview.postMessage({ type, body });
 	}
 
+
 	private onMessage(document: PawDrawDocument, message: any) {
+		console.log("++ message")
 		switch (message.type) {
 			case 'stroke':
+				document.makeEdit(message as PawDrawEdit);
+				return;
+
+			case 'copy':
+					console.log(message)
+					document.applyCopyBook(message.path);
+					return;
+
+			case 'data':
 				document.makeEdit(message as PawDrawEdit);
 				return;
 
