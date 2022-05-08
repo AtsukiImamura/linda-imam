@@ -113,7 +113,7 @@ class CopyBook(val path: String) {
       */
     private def getCopyBookFile(): String = {
         var contents: String = "";
-        val source = Source.fromFile("C:\\Users\\ohmoo\\projects\\linda-imam\\client\\media\\test.cpy")
+        val source = Source.fromFile(this.path)
         source.getLines.foreach(ln => contents += (ln + "\n"))
         source.close
         contents.stripMargin

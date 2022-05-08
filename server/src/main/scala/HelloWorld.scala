@@ -12,7 +12,7 @@ object HelloWorld {
       val b = new Breaks
       b.breakable {
         while(true){
-          System.out.println("input sth.");
+          System.out.println("2 000 WAITING_INPUT");
           val input = new Scanner(System.in);
           val s = input.nextLine;          
           if (s.equals("break")){

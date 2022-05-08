@@ -5,7 +5,7 @@
             <span>{{ selectedOptionTitle }}</span>
         </div>
         <div class="list" v-if="copySelectionOpened">
-            <template v-if="selections.length == 0">
+            <template>
                 <slot></slot>
             </template>
             <template v-if="selections.length > 0">

@@ -5,6 +5,7 @@ import LspCommunicator from './model/lspCommunicator';
 import { getNonce } from './util';
 import * as fs from "fs"
 import DataParser from '../front/model/DataParser';
+import * as pth from "path"
 /**
  * Define the type of edits used in paw draw files.
  */
@@ -42,10 +43,12 @@ class PawDrawDocument extends Disposable implements vscode.CustomDocument {
 
 	private readonly _uri: vscode.Uri;
 	private readonly lspCommunicator: LspCommunicator = new LspCommunicator((data: string) => this.onParseCopyResponse(data))
+	private readonly statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right)
 
 	private _documentData: Uint8Array;
 	private _edits: Array<PawDrawEdit> = [];
 	private _savedEdits: Array<PawDrawEdit> = [];
+	private _copybookUri?: string;
 
 	private readonly _delegate: PawDrawDocumentDelegate;
 
@@ -58,10 +61,18 @@ class PawDrawDocument extends Disposable implements vscode.CustomDocument {
 		this._uri = uri;
 		this._documentData = initialContent;
 		this._delegate = delegate;
-
+		this.refleshStatusBar(true)
 	}
 
 	public get uri() { return this._uri; }
+
+	public get copybookUri() {
+		return this._copybookUri;
+	}
+
+	public get copybookName() {
+		return this._copybookUri ?  pth.basename(this._copybookUri): undefined;
+	}
 
 	public get documentData(): Uint8Array { return this._documentData; }
 
@@ -103,34 +114,66 @@ class PawDrawDocument extends Disposable implements vscode.CustomDocument {
 	}
 
 	private readonly _onDidChangeCopyBook = this._register(new vscode.EventEmitter<{
-		readonly copy: ICopyBook | ICopyPrimitive
+		readonly copy: ICopyBook | ICopyPrimitive | undefined
 	}>());
 
 	public readonly onDidChangeCopyBook = this._onDidChangeCopyBook.event;
 
-	public applyCopyBook(path: string) {
+	public applyCopyBook(path?: string) {
+		if(!path) {
+			this._delegate.getFileData()
+				.then(data => {
+					const parser = new DataParser(data, {
+						name: "EMPTY_COPYBOOK",
+						level: 1,
+						lineNumber: 1,
+						redefines: "",
+						isRedefined: false,
+						occurs: 0,
+						isFiller: false,
+						statements: [
+							{
+								name: `X(${data.length})`,
+								level: 5,
+								lineNumber: 1,
+								redefines: "",
+								isRedefined: false,
+								occurs: 0,
+								isFiller: false,
+								dataType: {pic: `X(${data.length})`, originalPic: `X(${data.length})`},
+								binaryProperties: {offset: 0, dataSize: data.length, actualSize: data.length}
+							}
+						]
+					})
+					const parsed = parser.parse()
+					this.refleshStatusBar(true)
+					this._onDidChangeCopyBook.fire({copy: parsed})
+				})
+			return
+		}
+		this._copybookUri = path;
 		this.lspCommunicator.putMessage("parse -p "+ path)
 	}
 
-	private onParseCopyResponse(res: string) {
-		console.log("++ lsp mesage: "+res)
+	private async onParseCopyResponse(res: string) {
 		const details = res.split(" ").map(d => d.split(/\r?\n/g)).reduce((acc, cur) => [...acc, ...cur], [])
 		if(details.length < 4) {
+			this._copybookUri = "";
+			this.refleshStatusBar(true)
 			return;
 		}
 		if(parseInt(details[0]) != 0) {
+			this._copybookUri = "";
+			this.refleshStatusBar(true)
 			return
 		}
-		console.log(details)
 		const copy = (JSON.parse(fs.readFileSync(details[3].replace(/\r?\n/g, '')).toString()) as ICopyAstGroup[])[0]
-		const data = "1234567890123456789012345678901234567890123456789012345678901234"
+		const data = await this._delegate.getFileData()
 		// vscode.workspace.fs.readFile(this.uri)
-		console.log("this.uri: "+this.uri)
-		const parser = new DataParser(Uint8Array.from(data.split("").map(d => d.charCodeAt(0))), copy)
+		// console.log("this.uri: "+this.uri)
+		const parser = new DataParser(data, copy)
 		const parsed = parser.parse()
-		
-		console.log("copy created...")
-		console.log(parsed)
+		this.refleshStatusBar(true)
 		this._onDidChangeCopyBook.fire({copy: parsed})
 	}
 	/**
@@ -209,6 +252,26 @@ class PawDrawDocument extends Disposable implements vscode.CustomDocument {
 			}
 		};
 	}
+
+	
+	public refleshStatusBar(visible?: boolean) {
+		if(!visible) {
+			this.statusBarItem.hide()
+			return;
+		}
+		this.statusBarItem.command = {
+			arguments: [this],
+			command: "copybook.select",
+			title: "select copybook",
+		}
+		// this.statusBarItem.
+		if(this.copybookName){
+			this.statusBarItem.text = `$(open-editors-view-icon) ${this.copybookName}`
+		}else {
+			this.statusBarItem.text = "$(open-editors-view-icon) No copy book selected"
+		}
+		this.statusBarItem.show()
+	}
 }
 
 /**
@@ -243,7 +306,7 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 
 			vscode.commands.executeCommand('vscode.openWith', uri, PawDrawEditorProvider.viewType);
 		});
-
+		
 		return vscode.window.registerCustomEditorProvider(
 			PawDrawEditorProvider.viewType,
 			new PawDrawEditorProvider(context),
@@ -261,14 +324,18 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 	private static readonly viewType = 'catCustoms.pawDraw';
 
 
+
 	/**
 	 * Tracks all known webviews
 	 */
 	private readonly webviews = new WebviewCollection();
 
+
 	constructor(
 		private readonly _context: vscode.ExtensionContext
-	) { }
+
+	) { 
+	}
 
 	//#region CustomEditorProvider
 
@@ -279,13 +346,15 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 	): Promise<PawDrawDocument> {
 		const document: PawDrawDocument = await PawDrawDocument.create(uri, openContext.backupId, {
 			getFileData: async () => {
-				const webviewsForDocument = Array.from(this.webviews.get(document.uri));
-				if (!webviewsForDocument.length) {
-					throw new Error('Could not find webview to save for');
-				}
-				const panel = webviewsForDocument[0];
-				const response = await this.postMessageWithResponse<number[]>(panel, 'getFileData', {});
-				return new Uint8Array(response);
+				// const webviewsForDocument = Array.from(this.webviews.get(document.uri));
+				// if (!webviewsForDocument.length) {
+				// 	throw new Error('Could not find webview to save for');
+				// }
+				// const panel = webviewsForDocument[0];
+				// const response = await this.postMessageWithResponse<number[]>(panel, 'getFileData', {});
+				// return new Uint8Array(response);
+
+				return Uint8Array.from("1234567890123456789012345678901234567890123456789012345678901234".split("").map(d => d.charCodeAt(0)))
 			}
 		});
 
@@ -313,8 +382,6 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 		listeners.push(document.onDidChangeCopyBook(e => {
 			// Update all webviews when the applied copy book changes
 			for (const webviewPanel of this.webviews.get(document.uri)) {
-				console.log("sending copy...")
-				console.log(e.copy)
 				this.postMessage(webviewPanel, 'copy', {
 					copy: e.copy
 				});
@@ -323,8 +390,20 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 
 		document.onDidDispose(() => disposeAll(listeners));
 
+
+		vscode.commands.registerCommand("copybook.select", async (document: PawDrawDocument) => {
+			const selectedUris = await vscode.window.showOpenDialog({title: "Select a copybook"})
+			if(!selectedUris){
+				return;
+			}
+			const uri = selectedUris[0]
+			console.log(uri)
+
+			document.applyCopyBook(uri.path)
+		})
 		return document;
 	}
+
 
 	async resolveCustomEditor(
 		document: PawDrawDocument,
@@ -341,6 +420,10 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
 		webviewPanel.webview.onDidReceiveMessage(e => this.onMessage(document, e));
+
+		webviewPanel.onDidChangeViewState(e => {
+			document.refleshStatusBar(e.webviewPanel.visible)
+		})
 
 		// Wait for the webview to be properly ready before we init
 		webviewPanel.webview.onDidReceiveMessage(e => {
@@ -389,7 +472,7 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this._context.extensionUri, 'media', 'linda.js'));
+			this._context.extensionUri, 'dist', 'linda.js'));
 
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
 			this._context.extensionUri, 'media', 'main.css'));
@@ -445,14 +528,13 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 
 
 	private onMessage(document: PawDrawDocument, message: any) {
-		console.log("++ message")
+		// console.log("++ message")
 		switch (message.type) {
-			case 'stroke':
-				document.makeEdit(message as PawDrawEdit);
+			case 'init':
+				document.applyCopyBook()
 				return;
 
 			case 'copy':
-					console.log(message)
 					document.applyCopyBook(message.path);
 					return;
 

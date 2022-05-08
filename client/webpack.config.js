@@ -77,7 +77,7 @@ const front = {
   // devtool: "inline-source-map",
   entry: "./src/front/linda.ts",
   output: {
-    path: path.join(__dirname, "./media"),
+    path: path.join(__dirname, "./dist"),
     filename: "linda.js"
   },
   module: {

@@ -28,6 +28,11 @@ export default class DataParser {
 
     private exec(data: Uint8Array, copy: ICopyAstGroup | ICopyAstPrimitive, parentName: string): ICopyBook | ICopyPrimitive | undefined {
 
+        const details = this.redefines
+                        .filter(r => r.redefines == copy.name)
+                        .map(r => this.exec(data, r, copy.name))
+                        .filter(r => !!r )
+                        .sort((a, b) => a!.lineNumber - b!.lineNumber) as (ICopyBook | ICopyPrimitive)[]
         if((copy as any).statements == undefined) {
             //* Primitive
             const info = copy as ICopyAstPrimitive
@@ -40,11 +45,7 @@ export default class DataParser {
                 id: parentName + "." + info.name,
                 ... info,
                 value: Array.from(value),
-                details: this.redefines
-                            .filter(r => r.redefines == info.name)
-                            .map(r => this.exec(data, r, info.name))
-                            .filter(r => !!r )
-                            .sort((a, b) => a!.lineNumber - b!.lineNumber) as (ICopyBook | ICopyPrimitive)[]
+                details: details
                             
             }
         }
@@ -60,7 +61,7 @@ export default class DataParser {
         return  {
             id: parentName + "." + copy.name,
             ...copy,
-            details: [],
+            details: details,
             statements: statements.sort((a, b) => a!.lineNumber - b!.lineNumber)
         } as ICopyBook
     }

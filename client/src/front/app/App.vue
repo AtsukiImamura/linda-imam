@@ -1,13 +1,5 @@
 <template>
     <div class="main">
-        <div id="panel-copy-selection" class="header-selection">
-            <div class="title">
-                <span>COPY句</span>
-            </div>
-            <PullDownSelector :selections="copySelections" :title="'-- COPY句を選択 --'" @select="selectCopyBook">
-                <div id="no-previous-selection"></div>
-            </PullDownSelector>
-        </div>
         <div id="panel-data">
             <CopyStatementView v-if="statement.name" :statement="statement"></CopyStatementView>
         </div>
@@ -26,15 +18,9 @@ import CopyStatement from "../model/CopyStatement";
 })
 export default class App extends Vue {
 
-	// @ts-ignore
+    // @ts-ignore
 	private vscode = acquireVsCodeApi();
 
-
-    public created(): void {
-        console.log("::::created.");
-        // const buf = Buffer.from(new ArrayBuffer(10))
-        // console.log(buf)
-    }
     public mounted(): void {
         // @ts-ignore
         (window as any).addEventListener('message', async e => {
@@ -43,36 +29,17 @@ export default class App extends Vue {
                 case 'init':{}
                 case 'copy':
                     {
-                        console.log("@@ message received!!")
-                        console.log(body.copy)
                         this.statement = body.copy ? new CopyStatement(body.copy) : {};
+                        // console.log("@@ message received!!")
+                        // console.log(this.statement)
                         return;
                     }
 		    }
         });
         
-        console.log("mounted!!!!!")
         this.vscode.postMessage({
-            type: 'copy',
-            path: "C:\\Users\\ohmoo\\projects\\linda-imam\\client\\media\\test.cpy",
+            type: 'init',
         });
-    }
-
-    public get copySelections(): any[] {
-        return [
-            {
-                id: "C0A000A",   
-                title: "C0A000A"   
-            },
-            {
-                id: "C0A000B",   
-                title: "C0A000B"   
-            }
-        ]
-    }
-
-    public selectCopyBook(op: string): void {
-        console.log(`## selectCopyBook  op: ${op}`)
     }
 
     public statement: CopyStatement | {} = {};

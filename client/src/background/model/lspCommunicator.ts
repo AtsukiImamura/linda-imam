@@ -15,8 +15,11 @@ export default class LspCommunicator {
         //受信するたびに、内容を処理する
         this.lsp.stdout.on('data',  (data: any) => {
             const dataStr = data.toString()
-            // console.log(dataStr.slice(0,10))
-            if(dataStr.slice(0,10) ==  "input sth.") {
+            const token = dataStr.trim().split(" ");
+            if(token.length < 3) {
+                return;
+            }
+            if(token[0] == "2") { // waiting input
                 if(this.messageQueue.length == 0) {
                     this.lspStatus = "WAITING"
                 }else {
@@ -37,7 +40,6 @@ export default class LspCommunicator {
     }
 
     public putMessage(message: string): void {
-        console.log("putMessage status="+this.lspStatus)
         if(this.lspStatus == "WAITING"){
             this.commitMessage(message)
         }else {

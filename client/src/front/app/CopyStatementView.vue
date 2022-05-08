@@ -1,6 +1,6 @@
 <template>
   <div class="statement">
-    <div class="contents row" v-if="statement.isPrimitive">
+    <div class="contents row">
       <template v-if="statement.redefinedStatements.length > 0">
         <div class="col col-header"  >
           <select v-model="selectedRedefineId">
@@ -19,10 +19,10 @@
       </template>
       <template v-if="statement.redefinedStatements.length == 0">
         <div class="col col-header">{{ statement.name }}</div>
-        <div class="col col-edit">            
+        <div class="col col-edit" v-if="statement.isPrimitive">            
           <input v-model="statement.dispValue" />
         </div>
-        <div class="col col-hex">
+        <div class="col col-hex"  v-if="statement.isPrimitive">
             <BinaryEditor :statement="statement"></BinaryEditor>
         </div>
       </template>
@@ -53,19 +53,19 @@ export default class CopyStatementView extends Vue {
    * 現在の選択に基づいて再定義の項目情報を得る
    */
   public get drilldownStatements() {
-    // この項目がCOPY句定義の場合
-    if(this.statement.isGroup){
-      return this.statement.childStatements!;
-    }
 
     if(this.selectedRedefineId == "") {
-      return []
+      // この項目がCOPY句定義の場合
+      if(this.statement.isGroup){
+        return this.statement.childStatements!;
+      }else {
+        return [];
+      }
     }
 
     // この項目が集団項目で、表示する再定義が選択されている場合
     const red = this.statement.redefinedStatements
                 .filter(r => r.id == this.selectedRedefineId);
-    console.log(red);
     if(red.length !== 1){
       throw new Error("redefine id deplicated!")
     }

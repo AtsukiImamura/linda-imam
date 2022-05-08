@@ -1,0 +1,15 @@
+{
+    "fonts": [
+      {
+        "id": "linda-imam",
+        "src": [
+          {
+            "path": "./media/icon.woff",
+            "format": "woff"
+          }
+        ],
+        "weight": "normal",
+        "style": "normal"
+      }
+    ]
+}

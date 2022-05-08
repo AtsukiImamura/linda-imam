@@ -38,7 +38,23 @@
 				"title": "Create new Paw Draw Document",
 				"category": "Paw Draw"
 			}
-		]
+		],
+		"icons": {
+			"linda-imam": {
+				"description": "Theme icon",
+				"default": {
+					"fontPath": "./media/icon.woff",
+					"fontCharacter": "\\E002"
+				}
+			}
+		},
+		"productIconThemes": [
+			{
+			  "id": "iMamProductTheme",
+			  "label": "iMam Product Theme",
+			  "path": "./media/imam-product-icon-theme.json"
+			}
+		  ]
 	},
 	"scripts": {
 		"build": "webpack build",
