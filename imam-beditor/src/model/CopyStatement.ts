@@ -1,4 +1,4 @@
-import { ICopyBook, ICopyPrimitive, IStatement } from "../declaration/interface/ICopy";
+import type { ICopyBook, ICopyPrimitive, IStatement } from "@/model/interface/ICopy";
 import * as encoding from "encoding-japanese"
 
 export default class CopyStatement {

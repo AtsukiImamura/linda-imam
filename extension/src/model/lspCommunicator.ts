@@ -11,7 +11,7 @@ export default class LspCommunicator {
     private lspStatus: LSP_STATUS = "INITIALIZING"
 
     constructor(listeners:((data: string) => void)[] | ((data: string) => void)) {
-        this.lsp = cp.spawn( 'java', ['-jar', "C:\\Users\\ohmoo\\projects\\linda-imam\\target\\scala-2.12\\linda-imam-assembly-1.0.jar"],{stdio:[ 'pipe',null,null, 'pipe' ]});
+        this.lsp = cp.spawn( 'java', ['-jar', "C:\\Users\\ohmoo\\projects\\linda-imam\\server\\target\\scala-2.12\\linda-imam-assembly-1.0.jar"],{stdio:[ 'pipe',null,null, 'pipe' ]});
         //受信するたびに、内容を処理する
         this.lsp.stdout.on('data',  (data: any) => {
             const dataStr = data.toString()

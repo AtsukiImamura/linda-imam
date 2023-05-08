@@ -15,13 +15,7 @@
     </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue , Prop, Emit} from "vue-property-decorator";
-
-@Component({
-  components: {}
-})
-export default class PullDownSelector extends Vue {
+<script lang="ts" setup>
     
     @Prop() selections!: {id: string, title: string}[];
 
@@ -47,7 +41,6 @@ export default class PullDownSelector extends Vue {
     }
 
 
-}
 </script>
 
 <style lang="scss" scoped>

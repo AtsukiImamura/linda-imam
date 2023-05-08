@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { ICopyAstGroup, ICopyBook, ICopyPrimitive } from '../front/declaration/interface/ICopy';
+import { ICopyAstGroup, ICopyBook, ICopyPrimitive } from './model/interface/ICopy';
 import { Disposable, disposeAll } from './dispose';
 import LspCommunicator from './model/lspCommunicator';
 import { getNonce } from './util';
 import * as fs from "fs"
-import DataParser from '../front/model/DataParser';
+import DataParser from './model/DataParser';
 import * as pth from "path"
 /**
  * Define the type of edits used in paw draw files.
@@ -472,10 +472,10 @@ export class PawDrawEditorProvider implements vscode.CustomEditorProvider<PawDra
 	private getHtmlForWebview(webview: vscode.Webview): string {
 		// Local path to script and css for the webview
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this._context.extensionUri, 'dist', 'linda.js'));
+			this._context.extensionUri, 'dist', 'index.js'));
 
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this._context.extensionUri, 'media', 'main.css'));
+			this._context.extensionUri, 'dist', 'index.css'));
 
 		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(
 			this._context.extensionUri , 'media', 'vscode.css'));
